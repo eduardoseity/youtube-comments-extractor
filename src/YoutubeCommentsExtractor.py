@@ -3,14 +3,13 @@ import json
 import pandas as pd
 import argparse
 import time
+import logging
 
-start_time = time.time()
-
-
-def save(data):
-    with open('log', 'w') as file:
-        file.write(data)
-
+logger = logging.getLogger(__name__)
+file_handler = logging.FileHandler('log')
+file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
+logger.addHandler(file_handler)
+logger.setLevel(logging.INFO)
 
 class YoutubeCommentsExtractor:
     def __init__(self) -> None:
@@ -22,14 +21,17 @@ class YoutubeCommentsExtractor:
         self.__comments_df = None
 
     def extract(self, video_url: str, output_file: str):
-        print(f'Extracting comments from {video_url}...')
+        start_time = time.time()
+        logger.info(f'Extracting from {video_url}')
+        print(f'Extracting comments from {video_url}')
         self.__comments_df = pd.DataFrame()
         self.__video_url = video_url
         self.__initial_data = self.__get_initial_data()
         self.__get_comments(self.__initial_data)
         self.__comments_df.to_csv(output_file, index=False)
-        print(
-            f'{self.__comments_df.shape[0]} comments extracted and saved in {output_file}')
+        print(f'{self.__comments_df.shape[0]} comments extracted and saved in {output_file}')
+        total_time = time.time() - start_time
+        logger.info(f'Extracted in {total_time} seconds.')
 
     def __get_initial_data(self) -> dict:
         header = {
@@ -43,9 +45,10 @@ class YoutubeCommentsExtractor:
         }
         try:
             req = self.__session.get(self.__video_url, headers=header)
-        except:
-            raise Exception(
-                f'Error while trying to access url {self.__video_url}.')
+        except Exception as e:
+            logger.setLevel(logging.ERROR)
+            logger.error(e)
+            raise Exception(f'Error while trying to access url {self.__video_url}.')
 
         if req.status_code != 200:
             raise Exception(
@@ -264,13 +267,14 @@ class YoutubeCommentsExtractor:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Save Youtube comments from specific video.')
+    parser = argparse.ArgumentParser(description='Save Youtube comments from specific video.')
     parser.add_argument('url', help='URL of video')
     parser.add_argument('output', help='Output file')
     args = parser.parse_args()
 
-    ytcomments = YoutubeCommentsExtractor()
-    ytcomments.extract(args.url, args.output)
-
-    total_time = time.time()-start_time
+    try:
+        ytcomments = YoutubeCommentsExtractor()
+        ytcomments.extract(args.url, args.output)
+    except Exception as e:
+        logger.setLevel(logging.ERROR)
+        logger.error(e)
