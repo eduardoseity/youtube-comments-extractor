@@ -2,3 +2,4 @@
 /.vscode
 extracted_comments.csv
 log
+.gitignore
