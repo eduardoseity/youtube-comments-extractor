@@ -27,4 +27,4 @@ A file named `extracted_comments.csv` will be created with the fields below:
 * text: The text of the comment
 * reply: True if the comment is a reply
 ---
-<small>linkedin.com/in/eduardo-seity-iseri-15908224</small>
+<small>https://www.linkedin.com/in/eduardo-seity-iseri-15908224</small>
