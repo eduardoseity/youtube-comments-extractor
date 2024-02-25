@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 import time
 import logging
+from wakepy import keep
 
 logger = logging.getLogger(__name__)
 file_handler = logging.FileHandler('log')
@@ -270,11 +271,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Save Youtube comments from specific video.')
     parser.add_argument('url', help='URL of video')
     parser.add_argument('output', help='Output file')
+    parser.add_argument('--keepwake', help='Avoid system sleeping while running the script')
     args = parser.parse_args()
+    
+    def start():
+        try:
+            ytcomments = YoutubeCommentsExtractor()
+            ytcomments.extract(args.url, args.output)
+        except Exception as e:
+            logger.setLevel(logging.ERROR)
+            logger.error(e)
 
-    try:
-        ytcomments = YoutubeCommentsExtractor()
-        ytcomments.extract(args.url, args.output)
-    except Exception as e:
-        logger.setLevel(logging.ERROR)
-        logger.error(e)
+    if args.keepwake:
+        with keep.presenting():
+            start()
+    else:
+        start()
